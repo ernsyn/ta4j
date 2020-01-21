@@ -1,5 +1,12 @@
+dist: xenial
+
 language: java
 
+services:
+  - xvfb
+  
 jdk:
-  - oraclejdk8
-#  - openjdk8
+  - openjdk8
+
+script:
+  -  mvn -B test license:check formatter:format formatter:validate

@@ -1,7 +1,8 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan & respective authors (see AUTHORS)
+ * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2019 Ta4j Organization & respective
+ * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,34 +25,43 @@ package org.ta4j.core.indicators.helpers;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.ta4j.core.TATestsUtils.assertDecimalEquals;
-import org.ta4j.core.TimeSeries;
-import org.ta4j.core.mocks.MockTimeSeries;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.indicators.AbstractIndicatorTest;
+import org.ta4j.core.mocks.MockBarSeries;
+import org.ta4j.core.num.Num;
 
-public class LossIndicatorTest {
+import java.util.function.Function;
+import static org.ta4j.core.TestUtils.assertNumEquals;
 
-    private TimeSeries data;
+public class LossIndicatorTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
+
+    private BarSeries data;
+
+    public LossIndicatorTest(Function<Number, Num> numFunction) {
+        super(numFunction);
+    }
 
     @Before
     public void setUp() {
-        data = new MockTimeSeries(1, 2, 3, 4, 3, 4, 7, 4, 3, 3, 5, 3, 2);
+        data = new MockBarSeries(numFunction, 1, 2, 3, 4, 3, 4, 7, 4, 3, 3, 5, 3, 2);
     }
 
     @Test
     public void lossUsingClosePrice() {
         LossIndicator loss = new LossIndicator(new ClosePriceIndicator(data));
-        assertDecimalEquals(loss.getValue(0), 0);
-        assertDecimalEquals(loss.getValue(1), 0);
-        assertDecimalEquals(loss.getValue(2), 0);
-        assertDecimalEquals(loss.getValue(3), 0);
-        assertDecimalEquals(loss.getValue(4), 1);
-        assertDecimalEquals(loss.getValue(5), 0);
-        assertDecimalEquals(loss.getValue(6), 0);
-        assertDecimalEquals(loss.getValue(7), 3);
-        assertDecimalEquals(loss.getValue(8), 1);
-        assertDecimalEquals(loss.getValue(9), 0);
-        assertDecimalEquals(loss.getValue(10), 0);
-        assertDecimalEquals(loss.getValue(11), 2);
-        assertDecimalEquals(loss.getValue(12), 1);
+        assertNumEquals(0, loss.getValue(0));
+        assertNumEquals(0, loss.getValue(1));
+        assertNumEquals(0, loss.getValue(2));
+        assertNumEquals(0, loss.getValue(3));
+        assertNumEquals(1, loss.getValue(4));
+        assertNumEquals(0, loss.getValue(5));
+        assertNumEquals(0, loss.getValue(6));
+        assertNumEquals(3, loss.getValue(7));
+        assertNumEquals(1, loss.getValue(8));
+        assertNumEquals(0, loss.getValue(9));
+        assertNumEquals(0, loss.getValue(10));
+        assertNumEquals(2, loss.getValue(11));
+        assertNumEquals(1, loss.getValue(12));
     }
 }

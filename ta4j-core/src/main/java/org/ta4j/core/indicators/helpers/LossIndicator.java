@@ -1,7 +1,8 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan & respective authors (see AUTHORS)
+ * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2019 Ta4j Organization & respective
+ * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,31 +23,32 @@
  */
 package org.ta4j.core.indicators.helpers;
 
-import org.ta4j.core.Decimal;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
+import org.ta4j.core.num.Num;
 
 /**
  * Gain indicator.
  */
-public class LossIndicator extends CachedIndicator<Decimal> {
+public class LossIndicator extends CachedIndicator<Num> {
 
-    private final Indicator<Decimal> indicator;
+    private static final long serialVersionUID = -3848368003378457940L;
+    private final Indicator<Num> indicator;
 
-    public LossIndicator(Indicator<Decimal> indicator) {
+    public LossIndicator(Indicator<Num> indicator) {
         super(indicator);
         this.indicator = indicator;
     }
 
     @Override
-    protected Decimal calculate(int index) {
+    protected Num calculate(int index) {
         if (index == 0) {
-            return Decimal.ZERO;
+            return numOf(0);
         }
         if (indicator.getValue(index).isLessThan(indicator.getValue(index - 1))) {
             return indicator.getValue(index - 1).minus(indicator.getValue(index));
         } else {
-            return Decimal.ZERO;
+            return numOf(0);
         }
     }
 }

@@ -1,7 +1,8 @@
-/*
+/**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan & respective authors (see AUTHORS)
+ * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2019 Ta4j Organization & respective
+ * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,52 +23,52 @@
  */
 package org.ta4j.core.indicators;
 
-import org.ta4j.core.Decimal;
 import org.ta4j.core.Indicator;
+import org.ta4j.core.num.Num;
 
 /**
  * Percentage price oscillator (PPO) indicator. <br/>
  * Aka. MACD Percentage Price Oscillator (MACD-PPO).
- * </p>
+ *
+ * @see <a href=
+ *      "https://www.investopedia.com/terms/p/ppo.asp">https://www.investopedia.com/terms/p/ppo.asp</a>
  */
-public class PPOIndicator extends CachedIndicator<Decimal> {
+public class PPOIndicator extends CachedIndicator<Num> {
 
     private static final long serialVersionUID = -4337731034816094765L;
-    
+
     private final EMAIndicator shortTermEma;
     private final EMAIndicator longTermEma;
 
     /**
-     * Constructor with shortTimeFrame "12" and longTimeFrame "26".
-     * 
+     * Constructor with shortBarCount "12" and longBarCount "26".
+     *
      * @param indicator the indicator
      */
-    public PPOIndicator(Indicator<Decimal> indicator) {
+    public PPOIndicator(Indicator<Num> indicator) {
         this(indicator, 12, 26);
     }
-    
+
     /**
      * Constructor.
-     * 
-     * @param indicator the indicator
-     * @param shortTimeFrame the short time frame
-     * @param longTimeFrame the long time frame
+     *
+     * @param indicator     the indicator
+     * @param shortBarCount the short time frame
+     * @param longBarCount  the long time frame
      */
-    public PPOIndicator(Indicator<Decimal> indicator, int shortTimeFrame, int longTimeFrame) {
+    public PPOIndicator(Indicator<Num> indicator, int shortBarCount, int longBarCount) {
         super(indicator);
-        if (shortTimeFrame > longTimeFrame) {
+        if (shortBarCount > longBarCount) {
             throw new IllegalArgumentException("Long term period count must be greater than short term period count");
         }
-        shortTermEma = new EMAIndicator(indicator, shortTimeFrame);
-        longTermEma = new EMAIndicator(indicator, longTimeFrame);
+        this.shortTermEma = new EMAIndicator(indicator, shortBarCount);
+        this.longTermEma = new EMAIndicator(indicator, longBarCount);
     }
 
     @Override
-    protected Decimal calculate(int index) {
-        Decimal shortEmaValue = shortTermEma.getValue(index);
-        Decimal longEmaValue = longTermEma.getValue(index);
-        return shortEmaValue.minus(longEmaValue)
-                .dividedBy(longEmaValue)
-                .multipliedBy(Decimal.HUNDRED);
+    protected Num calculate(int index) {
+        Num shortEmaValue = shortTermEma.getValue(index);
+        Num longEmaValue = longTermEma.getValue(index);
+        return shortEmaValue.minus(longEmaValue).dividedBy(longEmaValue).multipliedBy(numOf(100));
     }
 }
