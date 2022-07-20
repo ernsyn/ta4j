@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.ta4j</groupId>
 	<artifactId>ta4j-parent</artifactId>
-	<version>0.13</version>
+	<version>0.15-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Ta4j Parent</name>
@@ -52,7 +52,7 @@
 		<connection>scm:git:git://github.com/ta4j/ta4j.git</connection>
 		<developerConnection>scm:git:git@github.com:ta4j/ta4j.git</developerConnection>
 		<url>http://github.com/ta4j/ta4j</url>
-		<tag>0.13</tag>
+		<tag>0.14</tag>
 	</scm>
 
 	<modules>
@@ -65,6 +65,16 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>1.2.3</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<profiles>
 
@@ -89,9 +99,9 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>2.9.1</version>
+						<version>3.2.0</version>
 						<configuration>
-							<additionalparam>-Xdoclint:none</additionalparam>
+							<doclint>none</doclint>
 						</configuration>
 						<executions>
 							<execution>
