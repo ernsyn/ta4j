@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -41,7 +41,7 @@ public class RWIHighIndicator extends CachedIndicator<Num> {
     /**
      * Constructor.
      *
-     * @param series   the series
+     * @param series   the bar series
      * @param barCount the time frame
      */
     public RWIHighIndicator(BarSeries series, int barCount) {
@@ -55,7 +55,7 @@ public class RWIHighIndicator extends CachedIndicator<Num> {
             return NaN.NaN;
         }
 
-        Num maxRWIH = numOf(0);
+        Num maxRWIH = getBarSeries().numFactory().zero();
         for (int n = 2; n <= barCount; n++) {
             maxRWIH = maxRWIH.max(calcRWIHFor(index, n));
         }
@@ -63,12 +63,17 @@ public class RWIHighIndicator extends CachedIndicator<Num> {
         return maxRWIH;
     }
 
+    @Override
+    public int getCountOfUnstableBars() {
+        return barCount;
+    }
+
     private Num calcRWIHFor(final int index, final int n) {
         BarSeries series = getBarSeries();
         Num high = series.getBar(index).getHighPrice();
         Num lowN = series.getBar(index + 1 - n).getLowPrice();
         Num atrN = new ATRIndicator(series, n).getValue(index);
-        Num sqrtN = numOf(n).sqrt();
+        Num sqrtN = getBarSeries().numFactory().numOf(n).sqrt();
 
         return high.minus(lowN).dividedBy(atrN.multipliedBy(sqrtN));
     }

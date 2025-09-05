@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -35,14 +35,13 @@ import org.ta4j.core.num.Num;
  * DeMark Reversal Indicator.
  *
  * @see <a href=
- *      "http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:pivot_points">
- *      http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:pivot_points</a>
+ *      "https://chartschool.stockcharts.com/table-of-contents/technical-indicators-and-overlays/technical-overlays/pivot-points">
+ *      https://chartschool.stockcharts.com/table-of-contents/technical-indicators-and-overlays/technical-overlays/pivot-points</a>
  */
 public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
 
     private final DeMarkPivotPointIndicator pivotPointIndicator;
     private final DeMarkPivotLevel level;
-    private final Num two;
 
     public enum DeMarkPivotLevel {
         RESISTANCE, SUPPORT,
@@ -51,8 +50,8 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
     /**
      * Constructor.
      *
-     * Calculates the DeMark reversal for the corresponding pivot level
-     * 
+     * Calculates the DeMark reversal for the corresponding pivot level.
+     *
      * @param pivotPointIndicator the {@link DeMarkPivotPointIndicator} for this
      *                            reversal
      * @param level               the {@link DeMarkPivotLevel} for this reversal
@@ -62,12 +61,11 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
         super(pivotPointIndicator);
         this.pivotPointIndicator = pivotPointIndicator;
         this.level = level;
-        this.two = numOf(2);
     }
 
     @Override
     protected Num calculate(int index) {
-        Num x = pivotPointIndicator.getValue(index).multipliedBy(numOf(4));
+        Num x = pivotPointIndicator.getValue(index).multipliedBy(getBarSeries().numFactory().numOf(4));
         Num result;
 
         if (level == DeMarkPivotLevel.SUPPORT) {
@@ -77,7 +75,11 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
         }
 
         return result;
+    }
 
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 
     private Num calculateResistance(Num x, int index) {
@@ -91,7 +93,7 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
             low = getBarSeries().getBar(i).getLowPrice().min(low);
         }
 
-        return x.dividedBy(two).minus(low);
+        return x.dividedBy(getBarSeries().numFactory().two()).minus(low);
     }
 
     private Num calculateSupport(Num x, int index) {
@@ -105,6 +107,6 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
             high = getBarSeries().getBar(i).getHighPrice().max(high);
         }
 
-        return x.dividedBy(two).minus(high);
+        return x.dividedBy(getBarSeries().numFactory().two()).minus(high);
     }
 }

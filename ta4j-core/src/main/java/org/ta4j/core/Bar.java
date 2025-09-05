@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,6 +26,9 @@ package org.ta4j.core;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Function;
@@ -33,46 +36,10 @@ import java.util.function.Function;
 import org.ta4j.core.num.Num;
 
 /**
- * End bar of a time period.
- *
- * Bar object is aggregated open/high/low/close/volume/etc. data over a time
- * period.
+ * A {@code Bar} is aggregated open/high/low/close/volume/etc. data over a time
+ * period. It represents the "end bar" of a time period.
  */
 public interface Bar extends Serializable {
-    /**
-     * @return the open price of the period
-     */
-    Num getOpenPrice();
-
-    /**
-     * @return the low price of the period
-     */
-    Num getLowPrice();
-
-    /**
-     * @return the high price of the period
-     */
-    Num getHighPrice();
-
-    /**
-     * @return the close price of the period
-     */
-    Num getClosePrice();
-
-    /**
-     * @return the whole tradeNum volume in the period
-     */
-    Num getVolume();
-
-    /**
-     * @return the number of trades in the period
-     */
-    long getTrades();
-
-    /**
-     * @return the whole traded amount of the period
-     */
-    Num getAmount();
 
     /**
      * @return the time period of the bar
@@ -80,36 +47,119 @@ public interface Bar extends Serializable {
     Duration getTimePeriod();
 
     /**
-     * @return the begin timestamp of the bar period
+     * @return the begin timestamp of the bar period (in UTC).
      */
-    ZonedDateTime getBeginTime();
+    Instant getBeginTime();
 
     /**
-     * @return the end timestamp of the bar period
+     * @return the end timestamp of the bar period (in UTC).
      */
-    ZonedDateTime getEndTime();
+    Instant getEndTime();
+
+    /**
+     * @return the open price of the bar period
+     */
+    Num getOpenPrice();
+
+    /**
+     * @return the high price of the bar period
+     */
+    Num getHighPrice();
+
+    /**
+     * @return the low price of the bar period
+     */
+    Num getLowPrice();
+
+    /**
+     * @return the close price of the bar period
+     */
+    Num getClosePrice();
+
+    /**
+     * @return the total traded volume of the bar period
+     */
+    Num getVolume();
+
+    /**
+     * @return the total traded amount (tradePrice x tradeVolume) of the bar period
+     */
+    Num getAmount();
+
+    /**
+     * @return the number of trades of the bar period
+     */
+    long getTrades();
 
     /**
      * @param timestamp a timestamp
      * @return true if the provided timestamp is between the begin time and the end
      *         time of the current period, false otherwise
      */
-    default boolean inPeriod(ZonedDateTime timestamp) {
+    default boolean inPeriod(Instant timestamp) {
         return timestamp != null && !timestamp.isBefore(getBeginTime()) && timestamp.isBefore(getEndTime());
     }
 
     /**
-     * @return a human-friendly string of the end timestamp
+     * @return the bar's begin time in UTC as {@link ZonedDateTime}
      */
-    default String getDateName() {
-        return getEndTime().format(DateTimeFormatter.ISO_DATE_TIME);
+    default ZonedDateTime getZonedBeginTime() {
+        return getBeginTime().atZone(ZoneOffset.UTC);
     }
 
     /**
-     * @return a even more human-friendly string of the end timestamp
+     * @return the bar's end time in UTC as {@link ZonedDateTime}
+     */
+    default ZonedDateTime getZonedEndTime() {
+        return getEndTime().atZone(ZoneOffset.UTC);
+    }
+
+    /**
+     * Converts the begin time of the bar to a time in the system's time zone.
+     *
+     * <p>
+     * <b>Warning:</b> The use of {@link ZoneId#systemDefault()} may introduce
+     * variability based on the system's default time zone settings. This can result
+     * in inconsistencies in time calculations and comparisons, particularly due to
+     * daylight saving time (DST). It is recommended to always utilize either
+     * {@link #getBeginTime()} or {@link #getZonedBeginTime()} for accurate results.
+     *
+     * @return the bar's begin time converted to system time zone
+     */
+    default ZonedDateTime getSystemZonedBeginTime() {
+        return getBeginTime().atZone(ZoneId.systemDefault());
+    }
+
+    /**
+     * Converts the end time of the bar to a time in the system's time zone.
+     *
+     * <p>
+     * <b>Warning:</b> The use of {@link ZoneId#systemDefault()} may introduce
+     * variability based on the system's default time zone settings. This can result
+     * in inconsistencies in time calculations and comparisons, particularly due to
+     * daylight saving time (DST). It is recommended to always utilize either
+     * {@link #getEndTime()} or {@link #getZonedEndTime()} for accurate results.
+     *
+     * @return the bar's end time converted to system time zone
+     */
+    default ZonedDateTime getSystemZonedEndTime() {
+        return getEndTime().atZone(ZoneId.systemDefault());
+    }
+
+    /**
+     * @return a user-friendly representation of the end timestamp in the system's
+     *         time zone
+     */
+    default String getDateName() {
+        return getSystemZonedEndTime().format(DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    /**
+     * @return an even more user-friendly representation of the end timestamp in the
+     *         system's time zone
      */
     default String getSimpleDateName() {
-        return getEndTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return getSystemZonedEndTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 
     /**
@@ -131,44 +181,40 @@ public interface Bar extends Serializable {
     }
 
     /**
-     * Adds a trade at the end of bar period.
-     * 
+     * Adds a trade and updates the close price at the end of the bar period.
+     *
      * @param tradeVolume the traded volume
-     * @param tradePrice  the price
-     * @deprecated use corresponding function of {@link BarSeries}
-     */
-    @Deprecated
-    default void addTrade(double tradeVolume, double tradePrice, Function<Number, Num> numFunction) {
-        addTrade(numFunction.apply(tradeVolume), numFunction.apply(tradePrice));
-    }
-
-    /**
-     * Adds a trade at the end of bar period.
-     * 
-     * @param tradeVolume the traded volume
-     * @param tradePrice  the price
-     * @deprecated use corresponding function of {@link BarSeries}
-     */
-    @Deprecated
-    default void addTrade(String tradeVolume, String tradePrice, Function<Number, Num> numFunction) {
-        addTrade(numFunction.apply(new BigDecimal(tradeVolume)), numFunction.apply(new BigDecimal(tradePrice)));
-    }
-
-    /**
-     * Adds a trade at the end of bar period.
-     * 
-     * @param tradeVolume the traded volume
-     * @param tradePrice  the price
+     * @param tradePrice  the actual price per asset
      */
     void addTrade(Num tradeVolume, Num tradePrice);
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     *
+     * @param price       the actual price per asset
+     * @param numFunction the numbers precision
+     */
     default void addPrice(String price, Function<Number, Num> numFunction) {
         addPrice(numFunction.apply(new BigDecimal(price)));
     }
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     *
+     * @param price       the actual price per asset
+     * @param numFunction the numbers precision
+     */
     default void addPrice(Number price, Function<Number, Num> numFunction) {
         addPrice(numFunction.apply(price));
     }
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     *
+     * @param price the actual price per asset
+     */
     void addPrice(Num price);
 }

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,80 +25,66 @@ package org.ta4j.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.ta4j.core.Trade.TradeType;
-import org.ta4j.core.cost.CostModel;
-import org.ta4j.core.cost.ZeroCostModel;
+import org.ta4j.core.analysis.cost.CostModel;
+import org.ta4j.core.analysis.cost.ZeroCostModel;
 import org.ta4j.core.num.Num;
 
 /**
  * Base implementation of a {@link TradingRecord}.
- *
  */
 public class BaseTradingRecord implements TradingRecord {
 
     private static final long serialVersionUID = -4436851731855891220L;
 
-    /**
-     * The name of the trading record
-     */
+    /** The name of the trading record. */
     private String name;
 
-    /**
-     * The recorded trades
-     */
-    private List<Trade> trades = new ArrayList<>();
+    /** The start of the recording (included). */
+    private final Integer startIndex;
 
-    /**
-     * The recorded BUY trades
-     */
-    private List<Trade> buyTrades = new ArrayList<>();
+    /** The end of the recording (included). */
+    private final Integer endIndex;
 
-    /**
-     * The recorded SELL trades
-     */
-    private List<Trade> sellTrades = new ArrayList<>();
+    /** The recorded trades. */
+    private final List<Trade> trades = new ArrayList<>();
 
-    /**
-     * The recorded entry trades
-     */
-    private List<Trade> entryTrades = new ArrayList<>();
+    /** The recorded BUY trades. */
+    private final List<Trade> buyTrades = new ArrayList<>();
 
-    /**
-     * The recorded exit trades
-     */
-    private List<Trade> exitTrades = new ArrayList<>();
+    /** The recorded SELL trades. */
+    private final List<Trade> sellTrades = new ArrayList<>();
 
-    /**
-     * The entry type (BUY or SELL) in the trading session
-     */
-    private TradeType startingType;
+    /** The recorded entry trades. */
+    private final List<Trade> entryTrades = new ArrayList<>();
 
-    /**
-     * The recorded positions
-     */
-    private List<Position> positions = new ArrayList<>();
+    /** The recorded exit trades. */
+    private final List<Trade> exitTrades = new ArrayList<>();
 
-    /**
-     * The current non-closed position (there's always one)
-     */
+    /** The entry type (BUY or SELL) in the trading session. */
+    private final TradeType startingType;
+
+    /** The recorded positions. */
+    private final List<Position> positions = new ArrayList<>();
+
+    /** The current non-closed position (there's always one). */
     private Position currentPosition;
 
-    /**
-     * Trading cost models
-     */
-    private CostModel transactionCostModel;
-    private CostModel holdingCostModel;
+    /** The cost model for transactions of the asset. */
+    private final transient CostModel transactionCostModel;
 
-    /**
-     * Constructor.
-     */
+    /** The cost model for holding asset (e.g. borrowing). */
+    private final transient CostModel holdingCostModel;
+
+    /** Constructor with {@link #startingType} = BUY. */
     public BaseTradingRecord() {
         this(TradeType.BUY);
     }
 
     /**
-     * Constructor.
+     * Constructor with {@link #startingType} = BUY.
      *
      * @param name the name of the tradingRecord
      */
@@ -110,9 +96,9 @@ public class BaseTradingRecord implements TradingRecord {
     /**
      * Constructor.
      *
-     * @param name           the name of the trading record
-     * @param entryTradeType the {@link TradeType trade type} of entries in the
-     *                       trading session
+     * @param name      the name of the trading record
+     * @param tradeType the {@link TradeType trade type} of entries in the trading
+     *                  session
      */
     public BaseTradingRecord(String name, TradeType tradeType) {
         this(tradeType, new ZeroCostModel(), new ZeroCostModel());
@@ -122,8 +108,8 @@ public class BaseTradingRecord implements TradingRecord {
     /**
      * Constructor.
      *
-     * @param entryTradeType the {@link TradeType trade type} of entries in the
-     *                       trading session
+     * @param tradeType the {@link TradeType trade type} of entries in the trading
+     *                  session
      */
     public BaseTradingRecord(TradeType tradeType) {
         this(tradeType, new ZeroCostModel(), new ZeroCostModel());
@@ -135,13 +121,32 @@ public class BaseTradingRecord implements TradingRecord {
      * @param entryTradeType       the {@link TradeType trade type} of entries in
      *                             the trading session
      * @param transactionCostModel the cost model for transactions of the asset
-     * @param holdingCostModel     the cost model for holding asset (e.g. borrowing)
+     * @param holdingCostModel     the cost model for holding the asset (e.g.
+     *                             borrowing)
      */
     public BaseTradingRecord(TradeType entryTradeType, CostModel transactionCostModel, CostModel holdingCostModel) {
-        if (entryTradeType == null) {
-            throw new IllegalArgumentException("Starting type must not be null");
-        }
+        this(entryTradeType, null, null, transactionCostModel, holdingCostModel);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param entryTradeType       the {@link TradeType trade type} of entries in
+     *                             the trading session
+     * @param startIndex           the start of the recording (included)
+     * @param endIndex             the end of the recording (included)
+     * @param transactionCostModel the cost model for transactions of the asset
+     * @param holdingCostModel     the cost model for holding the asset (e.g.
+     *                             borrowing)
+     * @throws NullPointerException if entryTradeType is null
+     */
+    public BaseTradingRecord(TradeType entryTradeType, Integer startIndex, Integer endIndex,
+            CostModel transactionCostModel, CostModel holdingCostModel) {
+        Objects.requireNonNull(entryTradeType, "Starting type must not be null");
+
         this.startingType = entryTradeType;
+        this.startIndex = startIndex;
+        this.endIndex = endIndex;
         this.transactionCostModel = transactionCostModel;
         this.holdingCostModel = holdingCostModel;
         currentPosition = new Position(entryTradeType, transactionCostModel, holdingCostModel);
@@ -160,7 +165,8 @@ public class BaseTradingRecord implements TradingRecord {
      * Constructor.
      *
      * @param transactionCostModel the cost model for transactions of the asset
-     * @param holdingCostModel     the cost model for holding asset (e.g. borrowing)
+     * @param holdingCostModel     the cost model for holding the asset (e.g.
+     *                             borrowing)
      * @param trades               the trades to be recorded (cannot be empty)
      */
     public BaseTradingRecord(CostModel transactionCostModel, CostModel holdingCostModel, Trade... trades) {
@@ -225,8 +231,23 @@ public class BaseTradingRecord implements TradingRecord {
     }
 
     @Override
+    public CostModel getTransactionCostModel() {
+        return transactionCostModel;
+    }
+
+    @Override
+    public CostModel getHoldingCostModel() {
+        return holdingCostModel;
+    }
+
+    @Override
     public List<Position> getPositions() {
         return positions;
+    }
+
+    @Override
+    public List<Trade> getTrades() {
+        return trades;
     }
 
     @Override
@@ -239,9 +260,9 @@ public class BaseTradingRecord implements TradingRecord {
 
     @Override
     public Trade getLastTrade(TradeType tradeType) {
-        if (TradeType.BUY.equals(tradeType) && !buyTrades.isEmpty()) {
+        if (TradeType.BUY == tradeType && !buyTrades.isEmpty()) {
             return buyTrades.get(buyTrades.size() - 1);
-        } else if (TradeType.SELL.equals(tradeType) && !sellTrades.isEmpty()) {
+        } else if (TradeType.SELL == tradeType && !sellTrades.isEmpty()) {
             return sellTrades.get(sellTrades.size() - 1);
         }
         return null;
@@ -263,16 +284,25 @@ public class BaseTradingRecord implements TradingRecord {
         return null;
     }
 
+    @Override
+    public Integer getStartIndex() {
+        return startIndex;
+    }
+
+    @Override
+    public Integer getEndIndex() {
+        return endIndex;
+    }
+
     /**
-     * Records an trade and the corresponding position (if closed).
+     * Records a trade and the corresponding position (if closed).
      *
      * @param trade   the trade to be recorded
      * @param isEntry true if the trade is an entry, false otherwise (exit)
+     * @throws NullPointerException if trade is null
      */
     private void recordTrade(Trade trade, boolean isEntry) {
-        if (trade == null) {
-            throw new IllegalArgumentException("Trade should not be null");
-        }
+        Objects.requireNonNull(trade, "Trade should not be null");
 
         // Storing the new trade in entries/exits lists
         if (isEntry) {
@@ -283,10 +313,10 @@ public class BaseTradingRecord implements TradingRecord {
 
         // Storing the new trade in trades list
         trades.add(trade);
-        if (TradeType.BUY.equals(trade.getType())) {
+        if (TradeType.BUY == trade.getType()) {
             // Storing the new trade in buy trades list
             buyTrades.add(trade);
-        } else if (TradeType.SELL.equals(trade.getType())) {
+        } else if (TradeType.SELL == trade.getType()) {
             // Storing the new trade in sell trades list
             sellTrades.add(trade);
         }
@@ -300,10 +330,11 @@ public class BaseTradingRecord implements TradingRecord {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("BaseTradingRecord: " + name != null ? name : "" + "\n");
+        StringBuilder sb = new StringBuilder().append("BaseTradingRecord: ")
+                .append(name == null ? "" : name)
+                .append(System.lineSeparator());
         for (Trade trade : trades) {
-            sb.append(trade.toString()).append("\n");
+            sb.append(trade.toString()).append(System.lineSeparator());
         }
         return sb.toString();
     }

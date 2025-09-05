@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,34 +25,60 @@ package org.ta4j.core.indicators.keltner;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
-import org.ta4j.core.indicators.CachedIndicator;
-import org.ta4j.core.indicators.EMAIndicator;
+import org.ta4j.core.indicators.AbstractIndicator;
+import org.ta4j.core.indicators.averages.EMAIndicator;
 import org.ta4j.core.indicators.helpers.TypicalPriceIndicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Keltner Channel (middle line) indicator
+ * Keltner Channel (middle line) indicator.
  *
  * @see <a href=
  *      "http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:keltner_channels">
  *      http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:keltner_channels</a>
  */
-public class KeltnerChannelMiddleIndicator extends CachedIndicator<Num> {
+public class KeltnerChannelMiddleIndicator extends AbstractIndicator<Num> {
 
     private final EMAIndicator emaIndicator;
 
+    /**
+     * Constructor.
+     *
+     * @param series      the bar series
+     * @param barCountEMA the bar count for the {@link EMAIndicator}
+     */
     public KeltnerChannelMiddleIndicator(BarSeries series, int barCountEMA) {
         this(new TypicalPriceIndicator(series), barCountEMA);
     }
 
+    /**
+     * Constructor.
+     *
+     * @param indicator   the {@link Indicator}
+     * @param barCountEMA the bar count for the {@link EMAIndicator}
+     */
     public KeltnerChannelMiddleIndicator(Indicator<Num> indicator, int barCountEMA) {
-        super(indicator);
-        emaIndicator = new EMAIndicator(indicator, barCountEMA);
+        super(indicator.getBarSeries());
+        this.emaIndicator = new EMAIndicator(indicator, barCountEMA);
     }
 
     @Override
-    protected Num calculate(int index) {
+    public Num getValue(int index) {
         return emaIndicator.getValue(index);
     }
 
+    @Override
+    public int getCountOfUnstableBars() {
+        return getBarCount();
+    }
+
+    /** @return the bar count of {@link #emaIndicator} */
+    public int getBarCount() {
+        return emaIndicator.getBarCount();
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " barCount: " + getBarCount();
+    }
 }

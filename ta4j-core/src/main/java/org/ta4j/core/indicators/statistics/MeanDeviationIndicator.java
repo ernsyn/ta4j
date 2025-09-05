@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,7 +25,7 @@ package org.ta4j.core.indicators.statistics;
 
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
-import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.averages.SMAIndicator;
 import org.ta4j.core.num.Num;
 
 /**
@@ -51,12 +51,12 @@ public class MeanDeviationIndicator extends CachedIndicator<Num> {
         super(indicator);
         this.indicator = indicator;
         this.barCount = barCount;
-        sma = new SMAIndicator(indicator, barCount);
+        this.sma = new SMAIndicator(indicator, barCount);
     }
 
     @Override
     protected Num calculate(int index) {
-        Num absoluteDeviations = numOf(0);
+        Num absoluteDeviations = getBarSeries().numFactory().zero();
 
         final Num average = sma.getValue(index);
         final int startIndex = Math.max(0, index - barCount + 1);
@@ -66,7 +66,12 @@ public class MeanDeviationIndicator extends CachedIndicator<Num> {
             // For each period...
             absoluteDeviations = absoluteDeviations.plus(indicator.getValue(i).minus(average).abs());
         }
-        return absoluteDeviations.dividedBy(numOf(nbValues));
+        return absoluteDeviations.dividedBy(getBarSeries().numFactory().numOf(nbValues));
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return barCount;
     }
 
     @Override

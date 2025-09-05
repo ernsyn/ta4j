@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,7 +26,7 @@ package org.ta4j.core.indicators.candles;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.indicators.CachedIndicator;
-import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.averages.SMAIndicator;
 import org.ta4j.core.num.Num;
 
 /**
@@ -37,20 +37,14 @@ import org.ta4j.core.num.Num;
  */
 public class ThreeWhiteSoldiersIndicator extends CachedIndicator<Boolean> {
 
-    /**
-     * Upper shadow
-     */
+    /** Upper shadow. */
     private final UpperShadowIndicator upperShadowInd;
-    /**
-     * Average upper shadow
-     */
-    private final SMAIndicator averageUpperShadowInd;
-    /**
-     * Factor used when checking if a candle has a very short upper shadow
-     */
-    private final Num factor;
 
-    private int blackCandleIndex = -1;
+    /** Average upper shadow. */
+    private final SMAIndicator averageUpperShadowInd;
+
+    /** Factor used when checking if a candle has a very short upper shadow. */
+    private final Num factor;
 
     /**
      * Constructor.
@@ -62,27 +56,32 @@ public class ThreeWhiteSoldiersIndicator extends CachedIndicator<Boolean> {
      */
     public ThreeWhiteSoldiersIndicator(BarSeries series, int barCount, Num factor) {
         super(series);
-        upperShadowInd = new UpperShadowIndicator(series);
-        averageUpperShadowInd = new SMAIndicator(upperShadowInd, barCount);
+        this.upperShadowInd = new UpperShadowIndicator(series);
+        this.averageUpperShadowInd = new SMAIndicator(upperShadowInd, barCount);
         this.factor = factor;
     }
 
     @Override
     protected Boolean calculate(int index) {
-        if (index < 3) {
+        if (getBarSeries().getBeginIndex() > (index - 3)) {
             // We need 4 candles: 1 black, 3 white
             return false;
         }
-        blackCandleIndex = index - 3;
-        return getBarSeries().getBar(blackCandleIndex).isBearish() && isWhiteSoldier(index - 2)
-                && isWhiteSoldier(index - 1) && isWhiteSoldier(index);
+        int blackCandleIndex = index - 3;
+        return getBarSeries().getBar(blackCandleIndex).isBearish() && isWhiteSoldier(index - 2, blackCandleIndex)
+                && isWhiteSoldier(index - 1, blackCandleIndex) && isWhiteSoldier(index, blackCandleIndex);
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 4;
     }
 
     /**
      * @param index the bar/candle index
      * @return true if the bar/candle has a very short upper shadow, false otherwise
      */
-    private boolean hasVeryShortUpperShadow(int index) {
+    private boolean hasVeryShortUpperShadow(int index, int blackCandleIndex) {
         Num currentUpperShadow = upperShadowInd.getValue(index);
         // We use the black candle index to remove to bias of the previous soldiers
         Num averageUpperShadow = averageUpperShadowInd.getValue(blackCandleIndex);
@@ -112,15 +111,16 @@ public class ThreeWhiteSoldiersIndicator extends CachedIndicator<Boolean> {
      * @param index the current bar/candle index
      * @return true if the current bar/candle is a white soldier, false otherwise
      */
-    private boolean isWhiteSoldier(int index) {
+    private boolean isWhiteSoldier(int index, int blackCandleIndex) {
         Bar prevBar = getBarSeries().getBar(index - 1);
         Bar currBar = getBarSeries().getBar(index);
         if (currBar.isBullish()) {
             if (prevBar.isBearish()) {
                 // First soldier case
-                return hasVeryShortUpperShadow(index) && currBar.getOpenPrice().isGreaterThan(prevBar.getLowPrice());
+                return hasVeryShortUpperShadow(index, blackCandleIndex)
+                        && currBar.getOpenPrice().isGreaterThan(prevBar.getLowPrice());
             } else {
-                return hasVeryShortUpperShadow(index) && isGrowing(index);
+                return hasVeryShortUpperShadow(index, blackCandleIndex) && isGrowing(index);
             }
         }
         return false;

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,13 +23,18 @@
  */
 package org.ta4j.core;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.ta4j.core.num.Num;
 
 /**
- * Indicator over a {@link BarSeries bar series}. <p/p> For each index of the
- * bar series, returns a value of type <b>T</b>.
+ * Indicator over a {@link BarSeries bar series}.
  *
- * @param <T> the type of returned value (Double, Boolean, etc.)
+ * <p>
+ * Returns a value of type <b>T</b> for each index of the bar series.
+ *
+ * @param <T> the type of the returned value (Double, Boolean, etc.)
  */
 public interface Indicator<T> {
 
@@ -40,36 +45,58 @@ public interface Indicator<T> {
     T getValue(int index);
 
     /**
+     * Returns {@code true} once {@code this} indicator has enough bars to
+     * accurately calculate its value. Otherwise, {@code false} will be returned,
+     * which means the indicator will give incorrect values ​​due to insufficient
+     * data. This method determines stability using the formula:
+     *
+     * <pre>
+     * isStable = {@link BarSeries#getBarCount()} >= {@link #getCountOfUnstableBars()}
+     * </pre>
+     *
+     * @return true if the calculated indicator value is correct
+     */
+    default boolean isStable() {
+        return getBarSeries().getBarCount() >= getCountOfUnstableBars();
+    }
+
+    /**
+     * Returns the number of bars up to which {@code this} Indicator calculates
+     * wrong values.
+     *
+     * @return unstable bars
+     */
+    int getCountOfUnstableBars();
+
+    /**
      * @return the related bar series
      */
     BarSeries getBarSeries();
 
     /**
-     * @return the {@link Num Num extending class} for the given {@link Number}
+     * @return all values from {@code this} Indicator over {@link #getBarSeries()}
+     *         as a Stream
      */
-    Num numOf(Number number);
+    default Stream<T> stream() {
+        return IntStream.range(getBarSeries().getBeginIndex(), getBarSeries().getEndIndex() + 1)
+                .mapToObj(this::getValue);
+    }
 
     /**
-     * Returns all values from an {@link Indicator} as an array of Doubles. The
-     * returned doubles could have a minor loss of precise, if {@link Indicator} was
-     * based on {@link Num Num}.
+     * Returns all values of an {@link Indicator} within the given {@code index} and
+     * {@code barCount} as an array of Doubles. The returned doubles could have a
+     * minor loss of precision, if {@link Indicator} was based on {@link Num Num}.
      *
      * @param ref      the indicator
      * @param index    the index
      * @param barCount the barCount
-     * @return array of Doubles within the barCount
+     * @return array of Doubles within {@code index} and {@code barCount}
      */
     static Double[] toDouble(Indicator<Num> ref, int index, int barCount) {
-
-        Double[] all = new Double[barCount];
-
         int startIndex = Math.max(0, index - barCount + 1);
-        for (int i = 0; i < barCount; i++) {
-            Num number = ref.getValue(i + startIndex);
-            all[i] = number.doubleValue();
-        }
-
-        return all;
+        return IntStream.range(startIndex, startIndex + barCount)
+                .mapToObj(ref::getValue)
+                .map(Num::doubleValue)
+                .toArray(Double[]::new);
     }
-
 }

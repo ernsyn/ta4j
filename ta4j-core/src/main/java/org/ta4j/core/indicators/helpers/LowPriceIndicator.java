@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,16 +23,35 @@
  */
 package org.ta4j.core.indicators.helpers;
 
-import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.indicators.AbstractIndicator;
+import org.ta4j.core.num.Num;
 
 /**
  * Low price indicator.
+ *
+ * <p>
+ * Returns the low price of a bar.
  */
-public class LowPriceIndicator extends PriceIndicator {
+public class LowPriceIndicator extends AbstractIndicator<Num> {
 
+    /**
+     * Constructor.
+     *
+     * @param series the bar series
+     */
     public LowPriceIndicator(BarSeries series) {
-        super(series, Bar::getLowPrice);
+        super(series);
     }
 
+    @Override
+    public Num getValue(int index) {
+        return getBarSeries().getBar(index).getLowPrice();
+    }
+
+    /** @return {@code 0} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
+    }
 }

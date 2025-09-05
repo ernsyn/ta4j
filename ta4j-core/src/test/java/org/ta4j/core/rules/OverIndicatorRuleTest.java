@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,9 +29,9 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseBarSeries;
+import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.Indicator;
-import org.ta4j.core.indicators.helpers.FixedDecimalIndicator;
+import org.ta4j.core.indicators.helpers.FixedNumIndicator;
 import org.ta4j.core.num.Num;
 
 public class OverIndicatorRuleTest {
@@ -40,9 +40,9 @@ public class OverIndicatorRuleTest {
 
     @Before
     public void setUp() {
-        BarSeries series = new BaseBarSeries();
-        Indicator<Num> indicator = new FixedDecimalIndicator(series, 20, 15, 10, 5, 0, -5, -10, 100);
-        rule = new OverIndicatorRule(indicator, series.numOf(5));
+        BarSeries series = new BaseBarSeriesBuilder().build();
+        Indicator<Num> indicator = new FixedNumIndicator(series, 20, 15, 10, 5, 0, -5, -10, 100);
+        rule = new OverIndicatorRule(indicator, series.numFactory().numOf(5));
     }
 
     @Test

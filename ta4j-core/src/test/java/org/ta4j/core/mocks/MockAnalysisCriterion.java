@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -38,7 +38,7 @@ public class MockAnalysisCriterion implements AnalysisCriterion {
 
     /**
      * Constructor.
-     * 
+     *
      * @param series BarSeries of the AnalysisCriterion
      * @param values AnalysisCriterion values
      */
@@ -49,20 +49,22 @@ public class MockAnalysisCriterion implements AnalysisCriterion {
 
     /**
      * Gets the final criterion value.
-     * 
+     *
      * @param series   BarSeries is ignored
      * @param position is ignored
      */
+    @Override
     public Num calculate(BarSeries series, Position position) {
         return values.get(values.size() - 1);
     }
 
     /**
      * Gets the final criterion value.
-     * 
+     *
      * @param series        BarSeries is ignored
      * @param tradingRecord is ignored
      */
+    @Override
     public Num calculate(BarSeries series, TradingRecord tradingRecord) {
         return values.get(values.size() - 1);
     }
@@ -70,11 +72,12 @@ public class MockAnalysisCriterion implements AnalysisCriterion {
     /**
      * Compares two criterion values and returns true if first value is greater than
      * second value, false otherwise.
-     * 
+     *
      * @param criterionValue1 first value
      * @param criterionValue2 second value
      * @return boolean indicating first value is greater than second value
      */
+    @Override
     public boolean betterThan(Num criterionValue1, Num criterionValue2) {
         return criterionValue1.isGreaterThan(criterionValue2);
     }

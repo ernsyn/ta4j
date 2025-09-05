@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,25 +24,24 @@
 package org.ta4j.core.utils;
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
 
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseBarSeries;
-import org.ta4j.core.ConvertibleBaseBarBuilder;
+import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.aggregator.BarAggregator;
 import org.ta4j.core.aggregator.BarSeriesAggregator;
 import org.ta4j.core.aggregator.BaseBarSeriesAggregator;
 import org.ta4j.core.aggregator.DurationBarAggregator;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.num.NumFactory;
 
 /**
- * Common utilities and helper methods for BarSeries.
+ * Common utilities and helper methods for {@link BarSeries}.
  */
 public final class BarSeriesUtils {
 
@@ -56,11 +55,12 @@ public final class BarSeriesUtils {
     }
 
     /**
-     * Aggregates a list of bars by <code>timePeriod</code>. The new
-     * <code>timePeriod</code> must be a multiplication of the actual time period.
-     * 
+     * Aggregates a list of bars by {@code timePeriod}. The new {@code timePeriod}
+     * must be a multiplication of the actual time period.
+     *
      * @param barSeries            the barSeries
-     * @param timePeriod           time period to aggregate
+     * @param timePeriod           the target time period that aggregated bars
+     *                             should have
      * @param aggregatedSeriesName the name of the aggregated barSeries
      * @return the aggregated barSeries
      */
@@ -78,7 +78,7 @@ public final class BarSeriesUtils {
      * can also be uses to check bar data equality over different marketdata
      * providers. This method does <b>not</b> add missing bars but replaces an
      * existing bar with its new bar.
-     * 
+     *
      * @param barSeries the barSeries
      * @param newBar    the bar which has precedence over the same existing bar
      * @return the previous bar replaced by newBar, or null if there was no
@@ -90,8 +90,8 @@ public final class BarSeriesUtils {
             return null;
         for (int i = 0; i < bars.size(); i++) {
             Bar bar = bars.get(i);
-            boolean isSameBar = bar.getBeginTime().isEqual(newBar.getBeginTime())
-                    && bar.getEndTime().isEqual(newBar.getEndTime())
+            boolean isSameBar = bar.getBeginTime().equals(newBar.getBeginTime())
+                    && bar.getEndTime().equals(newBar.getEndTime())
                     && bar.getTimePeriod().equals(newBar.getTimePeriod());
             if (isSameBar && !bar.equals(newBar))
                 return bars.set(i, newBar);
@@ -100,24 +100,24 @@ public final class BarSeriesUtils {
     }
 
     /**
-     * Finds possibly missing bars. The returned list contains the
-     * <code>endTime</code> of each missing bar. A bar is possibly missing if: (1)
-     * the subsequent bar starts not with the end time of the previous bar or (2) if
-     * any open, high, low price is missing.
-     * 
+     * Finds possibly missing bars. The returned list contains the {@code endTime}
+     * of each missing bar. A bar is possibly missing if: (1) the subsequent bar
+     * starts not with the end time of the previous bar or (2) if any open, high,
+     * low price is missing.
+     *
      * <b>Note:</b> Market closing times (e.g., weekends, holidays) will lead to
      * wrongly detected missing bars and should be ignored by the client.
-     * 
+     *
      * @param barSeries       the barSeries
      * @param findOnlyNaNBars find only bars with undefined prices
      * @return the list of possibly missing bars
      */
-    public static List<ZonedDateTime> findMissingBars(BarSeries barSeries, boolean findOnlyNaNBars) {
+    public static List<Instant> findMissingBars(BarSeries barSeries, boolean findOnlyNaNBars) {
         List<Bar> bars = barSeries.getBarData();
         if (bars == null || bars.isEmpty())
             return new ArrayList<>();
         Duration duration = bars.iterator().next().getTimePeriod();
-        List<ZonedDateTime> missingBars = new ArrayList<>();
+        List<Instant> missingBars = new ArrayList<>();
         for (int i = 0; i < bars.size(); i++) {
             Bar bar = bars.get(i);
             if (!findOnlyNaNBars) {
@@ -141,30 +141,37 @@ public final class BarSeriesUtils {
 
     /**
      * Gets a new BarSeries cloned from the provided barSeries with bars converted
-     * by conversionFunction. The returned barSeries inherits
-     * <code>beginIndex</code>, <code>endIndex</code> and
-     * <code>maximumBarCount</code> from the provided barSeries.
-     * 
-     * @param barSeries          the BarSeries
-     * @param conversionFunction the conversionFunction
-     * @return new cloned BarSeries with bars converted by conversionFunction
+     * by conversionFunction. The returned barSeries inherits {@code beginIndex},
+     * {@code endIndex} and {@code maximumBarCount} from the provided barSeries.
+     *
+     * @param barSeries  the BarSeries
+     * @param numFactory produces numbers used in converted barsŚeries; with this,
+     *                   we can convert a {@link Number} to a {@link Num Num
+     *                   implementation}
+     * @return new cloned BarSeries with bars converted by the Num function of num
      */
-    public static BarSeries convertBarSeries(BarSeries barSeries, Function<Number, Num> conversionFunction) {
+    public static BarSeries convertBarSeries(BarSeries barSeries, NumFactory numFactory) {
         List<Bar> bars = barSeries.getBarData();
         if (bars == null || bars.isEmpty())
             return barSeries;
-        List<Bar> convertedBars = new ArrayList<>();
+        var convertedBarSeries = new BaseBarSeriesBuilder().withName(barSeries.getName())
+                .withNumFactory(numFactory)
+                .build();
         for (int i = barSeries.getBeginIndex(); i <= barSeries.getEndIndex(); i++) {
             Bar bar = bars.get(i);
-            Bar convertedBar = new ConvertibleBaseBarBuilder<Number>(conversionFunction::apply)
-                    .timePeriod(bar.getTimePeriod()).endTime(bar.getEndTime())
-                    .openPrice(bar.getOpenPrice().getDelegate()).highPrice(bar.getHighPrice().getDelegate())
-                    .lowPrice(bar.getLowPrice().getDelegate()).closePrice(bar.getClosePrice().getDelegate())
-                    .volume(bar.getVolume().getDelegate()).amount(bar.getAmount().getDelegate()).trades(bar.getTrades())
-                    .build();
-            convertedBars.add(convertedBar);
+            convertedBarSeries.barBuilder()
+                    .timePeriod(bar.getTimePeriod())
+                    .endTime(bar.getEndTime())
+                    .openPrice(bar.getOpenPrice().getDelegate())
+                    .highPrice(bar.getHighPrice().getDelegate())
+                    .lowPrice(bar.getLowPrice().getDelegate())
+                    .closePrice(bar.getClosePrice().getDelegate())
+                    .volume(bar.getVolume().getDelegate())
+                    .amount(bar.getAmount().getDelegate())
+                    .trades(bar.getTrades())
+                    .add();
         }
-        BarSeries convertedBarSeries = new BaseBarSeries(barSeries.getName(), convertedBars, conversionFunction);
+
         if (barSeries.getMaximumBarCount() > 0) {
             convertedBarSeries.setMaximumBarCount(barSeries.getMaximumBarCount());
         }
@@ -174,7 +181,7 @@ public final class BarSeriesUtils {
 
     /**
      * Finds overlapping bars within barSeries.
-     * 
+     *
      * @param barSeries the bar series with bar data
      * @return overlapping bars
      */
@@ -198,8 +205,8 @@ public final class BarSeriesUtils {
     }
 
     /**
-     * Adds <code>newBars</code> to <code>barSeries</code>.
-     * 
+     * Adds {@code newBars} to {@code barSeries}.
+     *
      * @param barSeries the BarSeries
      * @param newBars   the new bars to be added
      */
@@ -217,7 +224,7 @@ public final class BarSeriesUtils {
     /**
      * Sorts the Bars by {@link Bar#getEndTime()} in ascending sequence (lower times
      * before higher times).
-     * 
+     *
      * @param bars the bars
      * @return the sorted bars
      */

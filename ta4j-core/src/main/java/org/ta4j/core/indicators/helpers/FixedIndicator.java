@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -32,8 +32,11 @@ import org.ta4j.core.indicators.AbstractIndicator;
 
 /**
  * A fixed indicator.
- * 
- * @param <T> the type of returned value (Double, Boolean, etc.)
+ *
+ * <p>
+ * Returns constant values for a bar.
+ *
+ * @param <T> the type of returned constant values (Double, Boolean, etc.)
  */
 public class FixedIndicator<T> extends AbstractIndicator<T> {
 
@@ -41,7 +44,8 @@ public class FixedIndicator<T> extends AbstractIndicator<T> {
 
     /**
      * Constructor.
-     * 
+     *
+     * @param series the bar series
      * @param values the values to be returned by this indicator
      */
     @SafeVarargs
@@ -50,6 +54,11 @@ public class FixedIndicator<T> extends AbstractIndicator<T> {
         this.values.addAll(Arrays.asList(values));
     }
 
+    /**
+     * Adds the {@code value} to {@link #values}.
+     *
+     * @param value the value to add
+     */
     public void addValue(T value) {
         this.values.add(value);
     }
@@ -57,6 +66,12 @@ public class FixedIndicator<T> extends AbstractIndicator<T> {
     @Override
     public T getValue(int index) {
         return values.get(index);
+    }
+
+    /** @return {@code 0} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 
 }

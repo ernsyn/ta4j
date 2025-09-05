@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -36,8 +36,11 @@ import org.ta4j.core.num.Num;
  */
 public class CloseLocationValueIndicator extends CachedIndicator<Num> {
 
-    private final Num zero = numOf(0);
-
+    /**
+     * Constructor.
+     *
+     * @param series the bar series
+     */
     public CloseLocationValueIndicator(BarSeries series) {
         super(series);
     }
@@ -51,7 +54,13 @@ public class CloseLocationValueIndicator extends CachedIndicator<Num> {
 
         final Num diffHighLow = high.minus(low);
 
-        return (diffHighLow.isNaN() || diffHighLow.isZero()) ? zero
+        return diffHighLow.isNaN() ? getBarSeries().numFactory().zero()
                 : ((close.minus(low)).minus(high.minus(close))).dividedBy(diffHighLow);
+    }
+
+    /** @return {@code 0} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

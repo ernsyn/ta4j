@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -30,8 +30,6 @@ import org.ta4j.core.indicators.helpers.CrossIndicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Crossed-down indicator rule.
- *
  * Satisfied when the value of the first {@link Indicator indicator}
  * crosses-down the value of the second one.
  */
@@ -42,17 +40,17 @@ public class CrossedDownIndicatorRule extends AbstractRule {
 
     /**
      * Constructor.
-     * 
+     *
      * @param indicator the indicator
      * @param threshold a threshold
      */
     public CrossedDownIndicatorRule(Indicator<Num> indicator, Number threshold) {
-        this(indicator, indicator.numOf(threshold));
+        this(indicator, indicator.getBarSeries().numFactory().numOf(threshold));
     }
 
     /**
      * Constructor.
-     * 
+     *
      * @param indicator the indicator
      * @param threshold a threshold
      */
@@ -62,7 +60,7 @@ public class CrossedDownIndicatorRule extends AbstractRule {
 
     /**
      * Constructor.
-     * 
+     *
      * @param first  the first indicator
      * @param second the second indicator
      */
@@ -70,6 +68,7 @@ public class CrossedDownIndicatorRule extends AbstractRule {
         this.cross = new CrossIndicator(first, second);
     }
 
+    /** This rule does not use the {@code tradingRecord}. */
     @Override
     public boolean isSatisfied(int index, TradingRecord tradingRecord) {
         final boolean satisfied = cross.getValue(index);
@@ -77,16 +76,12 @@ public class CrossedDownIndicatorRule extends AbstractRule {
         return satisfied;
     }
 
-    /**
-     * @return the initial lower indicator
-     */
+    /** @return the initial lower indicator */
     public Indicator<Num> getLow() {
         return cross.getLow();
     }
 
-    /**
-     * @return the initial upper indicator
-     */
+    /** @return the initial upper indicator */
     public Indicator<Num> getUp() {
         return cross.getUp();
     }

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -46,11 +46,16 @@ public class StandardDeviationIndicator extends CachedIndicator<Num> {
      */
     public StandardDeviationIndicator(Indicator<Num> indicator, int barCount) {
         super(indicator);
-        variance = new VarianceIndicator(indicator, barCount);
+        this.variance = new VarianceIndicator(indicator, barCount);
     }
 
     @Override
     protected Num calculate(int index) {
         return variance.getValue(index).sqrt();
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

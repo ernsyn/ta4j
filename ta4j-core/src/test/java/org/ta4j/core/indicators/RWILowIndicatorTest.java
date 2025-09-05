@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,12 +25,11 @@ package org.ta4j.core.indicators;
 
 import static org.ta4j.core.TestUtils.assertIndicatorEquals;
 
-import java.util.function.Function;
-
 import org.junit.Test;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.ExternalIndicatorTest;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.num.NumFactory;
 
 /**
  * Testing the RWILowIndicator
@@ -41,11 +40,11 @@ public class RWILowIndicatorTest extends AbstractIndicatorTest<BarSeries, Num> {
      * TODO: Just graphically Excel-Sheet validation with hard coded results. Excel
      * formula needed
      */
-    private ExternalIndicatorTest xls;
+    private final ExternalIndicatorTest xls;
 
-    public RWILowIndicatorTest(Function<Number, Num> numFunction) {
-        super((data, params) -> new RWILowIndicator(data, (int) params[0]), numFunction);
-        xls = new XLSIndicatorTest(this.getClass(), "RWIHL.xls", 9, numFunction);
+    public RWILowIndicatorTest(NumFactory numFactory) {
+        super((data, params) -> new RWILowIndicator(data, (int) params[0]), numFactory);
+        xls = new XLSIndicatorTest(this.getClass(), "RWIHL.xls", 9, numFactory);
     }
 
     @Test

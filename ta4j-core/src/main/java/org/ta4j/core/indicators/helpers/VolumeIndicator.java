@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,15 +29,30 @@ import org.ta4j.core.num.Num;
 
 /**
  * Volume indicator.
+ *
+ * <p>
+ * Returns the sum of the total traded volumes from the bar series within the
+ * bar count.
  */
 public class VolumeIndicator extends CachedIndicator<Num> {
 
-    private int barCount;
+    private final int barCount;
 
+    /**
+     * Constructor with {@code barCount} = 1.
+     *
+     * @param series the bar series
+     */
     public VolumeIndicator(BarSeries series) {
         this(series, 1);
     }
 
+    /**
+     * Constructor.
+     *
+     * @param series   the bar series
+     * @param barCount the time frame
+     */
     public VolumeIndicator(BarSeries series, int barCount) {
         super(series);
         this.barCount = barCount;
@@ -45,11 +60,18 @@ public class VolumeIndicator extends CachedIndicator<Num> {
 
     @Override
     protected Num calculate(int index) {
+        // TODO use partial sums
         int startIndex = Math.max(0, index - barCount + 1);
-        Num sumOfVolume = numOf(0);
+        Num sumOfVolume = getBarSeries().numFactory().zero();
         for (int i = startIndex; i <= index; i++) {
             sumOfVolume = sumOfVolume.plus(getBarSeries().getBar(i).getVolume());
         }
         return sumOfVolume;
+    }
+
+    /** @return {@link #barCount} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return barCount;
     }
 }

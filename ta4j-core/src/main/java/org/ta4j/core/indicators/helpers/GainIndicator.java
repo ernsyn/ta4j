@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,11 +29,21 @@ import org.ta4j.core.num.Num;
 
 /**
  * Gain indicator.
+ *
+ * <p>
+ * Returns the difference of the indicator value of a bar and its previous bar
+ * if the indicator value of the current bar is greater than the indicator value
+ * of the previous bar (otherwise, {@link Num#zero()} is returned).
  */
 public class GainIndicator extends CachedIndicator<Num> {
 
     private final Indicator<Num> indicator;
 
+    /**
+     * Constructor.
+     *
+     * @param indicator the {@link Indicator}
+     */
     public GainIndicator(Indicator<Num> indicator) {
         super(indicator);
         this.indicator = indicator;
@@ -42,12 +52,17 @@ public class GainIndicator extends CachedIndicator<Num> {
     @Override
     protected Num calculate(int index) {
         if (index == 0) {
-            return numOf(0);
+            return getBarSeries().numFactory().zero();
         }
-        if (indicator.getValue(index).isGreaterThan(indicator.getValue(index - 1))) {
-            return indicator.getValue(index).minus(indicator.getValue(index - 1));
-        } else {
-            return numOf(0);
-        }
+        Num actualValue = indicator.getValue(index);
+        Num previousValue = indicator.getValue(index - 1);
+        return actualValue.isGreaterThan(previousValue) ? actualValue.minus(previousValue)
+                : getBarSeries().numFactory().zero();
+    }
+
+    /** @return {@code 1} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return 1;
     }
 }

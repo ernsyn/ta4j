@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,29 +26,37 @@ package org.ta4j.core;
 import java.util.List;
 
 import org.ta4j.core.Trade.TradeType;
+import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.num.Num;
 
 /**
- * An analysis criterion.
+ * An analysis criterion. It can be used to:
  *
- * Can be used to:
  * <ul>
- * <li>Analyze the performance of a {@link Strategy strategy}
- * <li>Compare several {@link Strategy strategies} together
+ * <li>analyze the performance of a {@link Strategy strategy}
+ * <li>compare several {@link Strategy strategies} together
  * </ul>
  */
 public interface AnalysisCriterion {
 
+    /** Filter to differentiate between winning or losing positions. */
+    public enum PositionFilter {
+        /** Consider only winning positions. */
+        PROFIT,
+        /** Consider only losing positions. */
+        LOSS;
+    }
+
     /**
-     * @param series   a bar series, not null
-     * @param position a position, not null
+     * @param series   the bar series, not null
+     * @param position the position, not null
      * @return the criterion value for the position
      */
     Num calculate(BarSeries series, Position position);
 
     /**
-     * @param series        a bar series, not null
-     * @param tradingRecord a trading record, not null
+     * @param series        the bar series, not null
+     * @param tradingRecord the trading record, not null
      * @return the criterion value for the positions
      */
     Num calculate(BarSeries series, TradingRecord tradingRecord);
@@ -91,10 +99,7 @@ public interface AnalysisCriterion {
 
     /**
      * @param criterionValue1 the first value
-     * @param criterionValue2
-     * 
-     * 
-     *                        the second value
+     * @param criterionValue2 the second value
      * @return true if the first value is better than (according to the criterion)
      *         the second one, false otherwise
      */

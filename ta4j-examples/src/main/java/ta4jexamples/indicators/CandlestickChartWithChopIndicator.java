@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -40,13 +40,13 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.CandlestickRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.ui.ApplicationFrame;
+import org.jfree.chart.ui.UIUtils;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.DefaultHighLowDataset;
 import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.indicators.ChopIndicator;
@@ -90,7 +90,7 @@ public class CandlestickChartWithChopIndicator {
 
         for (int i = 0; i < nbBars; i++) {
             Bar bar = series.getBar(i);
-            dates[i] = new Date(bar.getEndTime().toEpochSecond() * 1000);
+            dates[i] = new Date(bar.getEndTime().toEpochMilli());
             opens[i] = bar.getOpenPrice().doubleValue();
             highs[i] = bar.getHighPrice().doubleValue();
             lows[i] = bar.getLowPrice().doubleValue();
@@ -113,7 +113,7 @@ public class CandlestickChartWithChopIndicator {
         org.jfree.data.time.TimeSeries chartTimeSeries = new org.jfree.data.time.TimeSeries("Btc price");
         for (int i = 0; i < series.getBarCount(); i++) {
             Bar bar = series.getBar(i);
-            chartTimeSeries.add(new Second(new Date(bar.getEndTime().toEpochSecond() * 1000)),
+            chartTimeSeries.add(new Second(new Date(bar.getEndTime().toEpochMilli())),
                     indicator.getValue(i).doubleValue());
         }
         dataset.addSeries(chartTimeSeries);
@@ -128,7 +128,7 @@ public class CandlestickChartWithChopIndicator {
             Bar bar = series.getBar(i);
             if (i < CHOP_INDICATOR_TIMEFRAME)
                 continue;
-            chartTimeSeries.add(new Second(new Date(bar.getEndTime().toEpochSecond() * 1000)),
+            chartTimeSeries.add(new Second(new Date(bar.getEndTime().toEpochMilli())),
                     indicator.getValue(i).doubleValue());
         }
         dataset.addSeries(chartTimeSeries);
@@ -201,19 +201,19 @@ public class CandlestickChartWithChopIndicator {
         ApplicationFrame frame = new ApplicationFrame("Ta4j example - Candlestick chart");
         frame.setContentPane(combinedChartPanel);
         frame.pack();
-        RefineryUtilities.centerFrameOnScreen(frame);
+        UIUtils.centerFrameOnScreen(frame);
         frame.setVisible(true);
 
         // CHOP oscillator upper/lower threshold guidelines
         XYLineAnnotation lineAnnotation = new XYLineAnnotation(
-                (double) series.getFirstBar().getBeginTime().toEpochSecond() * 1000d, CHOP_LOWER_THRESHOLD,
-                (double) series.getLastBar().getEndTime().toEpochSecond() * 1000d, CHOP_LOWER_THRESHOLD,
-                dashedThinLineStyle, Color.GREEN);
+                (double) series.getFirstBar().getBeginTime().toEpochMilli(), CHOP_LOWER_THRESHOLD,
+                (double) series.getLastBar().getEndTime().toEpochMilli(), CHOP_LOWER_THRESHOLD, dashedThinLineStyle,
+                Color.GREEN);
         lineAnnotation.setToolTipText("tradable below this");
         indicatorXYPlot.addAnnotation(lineAnnotation);
-        lineAnnotation = new XYLineAnnotation((double) series.getFirstBar().getBeginTime().toEpochSecond() * 1000d,
-                CHOP_UPPER_THRESHOLD, (double) series.getLastBar().getEndTime().toEpochSecond() * 1000d,
-                CHOP_UPPER_THRESHOLD, dashedThinLineStyle, Color.RED);
+        lineAnnotation = new XYLineAnnotation((double) series.getFirstBar().getBeginTime().toEpochMilli(),
+                CHOP_UPPER_THRESHOLD, (double) series.getLastBar().getEndTime().toEpochMilli(), CHOP_UPPER_THRESHOLD,
+                dashedThinLineStyle, Color.RED);
         lineAnnotation.setToolTipText("too choppy above this");
         indicatorXYPlot.addAnnotation(lineAnnotation);
     }

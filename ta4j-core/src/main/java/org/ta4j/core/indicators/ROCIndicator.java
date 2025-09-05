@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -27,8 +27,9 @@ import org.ta4j.core.Indicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Rate of change (ROCIndicator) indicator. Aka. Momentum
+ * Rate of change (ROCIndicator) indicator (also called "Momentum").
  *
+ * <p>
  * The ROCIndicator calculation compares the current value with the value "n"
  * periods ago.
  *
@@ -57,7 +58,14 @@ public class ROCIndicator extends CachedIndicator<Num> {
         int nIndex = Math.max(index - barCount, 0);
         Num nPeriodsAgoValue = indicator.getValue(nIndex);
         Num currentValue = indicator.getValue(index);
-        return currentValue.minus(nPeriodsAgoValue).dividedBy(nPeriodsAgoValue).multipliedBy(numOf(100));
+        return currentValue.minus(nPeriodsAgoValue)
+                .dividedBy(nPeriodsAgoValue)
+                .multipliedBy(getBarSeries().numFactory().hundred());
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return barCount;
     }
 
     @Override

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,37 +29,36 @@ import org.ta4j.core.indicators.helpers.ConstantIndicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Indicator-under-indicator rule.
+ * A rule that monitors when one {@link Indicator indicator} is below another.
  *
+ * <p>
  * Satisfied when the value of the first {@link Indicator indicator} is strictly
- * lesser than the value of the second one.
+ * less than the value of the second one.
  */
 public class UnderIndicatorRule extends AbstractRule {
 
-    /**
-     * The first indicator
-     */
+    /** The first indicator. */
     private final Indicator<Num> first;
-    /**
-     * The second indicator
-     */
+
+    /** The second indicator. */
     private final Indicator<Num> second;
 
     /**
      * Constructor.
      *
      * @param indicator the indicator
-     * @param threshold a threshold
+     * @param threshold the threshold
      */
     public UnderIndicatorRule(Indicator<Num> indicator, Number threshold) {
-        this(indicator, new ConstantIndicator<>(indicator.getBarSeries(), indicator.numOf(threshold)));
+        this(indicator, new ConstantIndicator<>(indicator.getBarSeries(),
+                indicator.getBarSeries().numFactory().numOf(threshold)));
     }
 
     /**
      * Constructor.
      *
      * @param indicator the indicator
-     * @param threshold a threshold
+     * @param threshold the threshold
      */
     public UnderIndicatorRule(Indicator<Num> indicator, Num threshold) {
         this(indicator, new ConstantIndicator<>(indicator.getBarSeries(), threshold));
@@ -76,6 +75,7 @@ public class UnderIndicatorRule extends AbstractRule {
         this.second = second;
     }
 
+    /** This rule does not use the {@code tradingRecord}. */
     @Override
     public boolean isSatisfied(int index, TradingRecord tradingRecord) {
         final boolean satisfied = first.getValue(index).isLessThan(second.getValue(index));

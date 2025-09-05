@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,7 +24,7 @@
 package ta4jexamples.walkforward;
 
 import java.time.Duration;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,11 +32,11 @@ import java.util.Map;
 
 import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BarSeriesManager;
 import org.ta4j.core.Strategy;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.TradingRecord;
-import org.ta4j.core.analysis.criteria.pnl.GrossReturnCriterion;
+import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 import org.ta4j.core.num.Num;
 
 import ta4jexamples.loaders.CsvTradesLoader;
@@ -50,9 +50,6 @@ import ta4jexamples.strategies.RSI2Strategy;
  *
  * @see <a href="http://en.wikipedia.org/wiki/Walk_forward_optimization">
  *      http://en.wikipedia.org/wiki/Walk_forward_optimization</a>
- * @see <a href=
- *      "http://www.futuresmag.com/2010/04/01/can-your-system-do-the-walk">
- *      http://www.futuresmag.com/2010/04/01/can-your-system-do-the-walk</a>
  */
 public class WalkForward {
 
@@ -73,12 +70,12 @@ public class WalkForward {
         beginIndexes.add(beginIndex);
 
         // Building the first interval before next split
-        ZonedDateTime beginInterval = series.getFirstBar().getEndTime();
-        ZonedDateTime endInterval = beginInterval.plus(splitDuration);
+        Instant beginInterval = series.getFirstBar().getEndTime();
+        Instant endInterval = beginInterval.plus(splitDuration);
 
         for (int i = beginIndex; i <= endIndex; i++) {
             // For each bar...
-            ZonedDateTime barTime = series.getBar(i).getEndTime();
+            Instant barTime = series.getBar(i).getEndTime();
             if (barTime.isBefore(beginInterval) || !barTime.isBefore(endInterval)) {
                 // Bar out of the interval
                 if (!endInterval.isAfter(barTime)) {
@@ -96,11 +93,11 @@ public class WalkForward {
     }
 
     /**
-     * Returns a new bar series which is a view of a subset of the current series.
+     * Returns a new bar series which is a copy from a subset of the current series.
      *
      * The new series has begin and end indexes which correspond to the bounds of
      * the sub-set into the full series.<br>
-     * The bar of the series are shared between the original bar series and the
+     * The bars of the series are shared between the original bar series and the
      * returned one (i.e. no copy).
      *
      * @param series     the bar series to get a sub-series of
@@ -112,15 +109,15 @@ public class WalkForward {
     public static BarSeries subseries(BarSeries series, int beginIndex, Duration duration) {
 
         // Calculating the sub-series interval
-        ZonedDateTime beginInterval = series.getBar(beginIndex).getEndTime();
-        ZonedDateTime endInterval = beginInterval.plus(duration);
+        Instant beginInterval = series.getBar(beginIndex).getEndTime();
+        Instant endInterval = beginInterval.plus(duration);
 
         // Checking bars belonging to the sub-series (starting at the provided index)
         int subseriesNbBars = 0;
         int endIndex = series.getEndIndex();
         for (int i = beginIndex; i <= endIndex; i++) {
             // For each bar...
-            ZonedDateTime barTime = series.getBar(i).getEndTime();
+            Instant barTime = series.getBar(i).getEndTime();
             if (barTime.isBefore(beginInterval) || !barTime.isBefore(endInterval)) {
                 // Bar out of the interval
                 break;
@@ -135,7 +132,7 @@ public class WalkForward {
 
     /**
      * Splits the bar series into sub-series lasting sliceDuration.<br>
-     * The current bar series is splitted every splitDuration.<br>
+     * The current bar series is split every splitDuration.<br>
      * The last sub-series may last less than sliceDuration.
      *
      * @param series        the bar series to split
@@ -196,5 +193,4 @@ public class WalkForward {
             System.out.println("\t\t--> Best strategy: " + strategies.get(bestStrategy) + "\n");
         }
     }
-
 }

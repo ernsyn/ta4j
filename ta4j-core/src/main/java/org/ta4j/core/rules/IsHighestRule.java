@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,20 +29,15 @@ import org.ta4j.core.indicators.helpers.HighestValueIndicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Indicator-highest-indicator rule.
- *
  * Satisfied when the value of the {@link Indicator indicator} is the highest
- * within the barCount.
+ * within the {@code barCount}.
  */
 public class IsHighestRule extends AbstractRule {
 
-    /**
-     * The actual indicator
-     */
+    /** The actual indicator. */
     private final Indicator<Num> ref;
-    /**
-     * The barCount
-     */
+
+    /** The barCount. */
     private final int barCount;
 
     /**
@@ -56,6 +51,7 @@ public class IsHighestRule extends AbstractRule {
         this.barCount = barCount;
     }
 
+    /** This rule does not use the {@code tradingRecord}. */
     @Override
     public boolean isSatisfied(int index, TradingRecord tradingRecord) {
         HighestValueIndicator highest = new HighestValueIndicator(ref, barCount);

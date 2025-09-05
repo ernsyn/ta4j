@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,13 +26,14 @@ package org.ta4j.core.indicators.candles;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.helpers.TransformIndicator;
+import org.ta4j.core.indicators.averages.SMAIndicator;
+import org.ta4j.core.indicators.numeric.UnaryOperation;
 import org.ta4j.core.num.Num;
 
 /**
  * Doji indicator.
  *
+ * <p>
  * A candle/bar is considered Doji if its body height is lower than the average
  * multiplied by a factor.
  *
@@ -42,15 +43,13 @@ import org.ta4j.core.num.Num;
  */
 public class DojiIndicator extends CachedIndicator<Boolean> {
 
-    /**
-     * Body height
-     */
+    /** Body height. */
     private final Indicator<Num> bodyHeightInd;
-    /**
-     * Average body height
-     */
+
+    /** Average body height. */
     private final SMAIndicator averageBodyHeightInd;
 
+    /** The factor used when checking if a candle is Doji. */
     private final Num factor;
 
     /**
@@ -63,9 +62,9 @@ public class DojiIndicator extends CachedIndicator<Boolean> {
      */
     public DojiIndicator(BarSeries series, int barCount, double bodyFactor) {
         super(series);
-        bodyHeightInd = TransformIndicator.abs(new RealBodyIndicator(series));
-        averageBodyHeightInd = new SMAIndicator(bodyHeightInd, barCount);
-        factor = numOf(bodyFactor);
+        this.bodyHeightInd = UnaryOperation.abs(new RealBodyIndicator(series));
+        this.averageBodyHeightInd = new SMAIndicator(bodyHeightInd, barCount);
+        this.factor = getBarSeries().numFactory().numOf(bodyFactor);
     }
 
     @Override
@@ -78,5 +77,10 @@ public class DojiIndicator extends CachedIndicator<Boolean> {
         Num currentBodyHeight = bodyHeightInd.getValue(index);
 
         return currentBodyHeight.isLessThan(averageBodyHeight.multipliedBy(factor));
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

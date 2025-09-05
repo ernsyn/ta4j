@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -35,9 +35,7 @@ import org.ta4j.core.num.NaN;
 import org.ta4j.core.num.Num;
 
 /**
- * The return rates.
- *
- * This class allows to compute the return rate of a price time-series
+ * Allows to compute the return rate of a price time-series.
  */
 public class Returns implements Indicator<Num> {
 
@@ -58,26 +56,20 @@ public class Returns implements Indicator<Num> {
         };
 
         /**
-         * @return calculate a single return rate
+         * @return the single return rate
          */
         public abstract Num calculate(Num xNew, Num xOld);
     }
 
     private final ReturnType type;
 
-    /**
-     * The bar series
-     */
+    /** The bar series. */
     private final BarSeries barSeries;
 
-    /**
-     * The return rates
-     */
-    private List<Num> values;
+    /** The return rates. */
+    private final List<Num> values;
 
-    /**
-     * Unit element for efficient arithmetic return computation
-     */
+    /** Unit element for efficient arithmetic return computation. */
     private static Num one;
 
     /**
@@ -85,16 +77,17 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries the bar series
      * @param position  a single position
+     * @param type      the ReturnType
      */
     public Returns(BarSeries barSeries, Position position, ReturnType type) {
-        one = barSeries.numOf(1);
+        one = barSeries.numFactory().one();
         this.barSeries = barSeries;
         this.type = type;
         // at index 0, there is no return
         values = new ArrayList<>(Collections.singletonList(NaN.NaN));
-        calculate(position);
+        calculate(position, barSeries.getEndIndex());
 
-        fillToTheEnd();
+        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -102,18 +95,22 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries     the bar series
      * @param tradingRecord the trading record
+     * @param type          the ReturnType
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnType type) {
-        one = barSeries.numOf(1);
+        one = barSeries.numFactory().one();
         this.barSeries = barSeries;
         this.type = type;
         // at index 0, there is no return
         values = new ArrayList<>(Collections.singletonList(NaN.NaN));
         calculate(tradingRecord);
 
-        fillToTheEnd();
+        fillToTheEnd(tradingRecord.getEndIndex(barSeries));
     }
 
+    /**
+     * @return the return rates
+     */
     public List<Num> getValues() {
         return values;
     }
@@ -128,13 +125,13 @@ public class Returns implements Indicator<Num> {
     }
 
     @Override
-    public BarSeries getBarSeries() {
-        return barSeries;
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 
     @Override
-    public Num numOf(Number number) {
-        return barSeries.numOf(number);
+    public BarSeries getBarSeries() {
+        return barSeries;
     }
 
     /**
@@ -144,31 +141,28 @@ public class Returns implements Indicator<Num> {
         return barSeries.getBarCount() - 1;
     }
 
-    public void calculate(Position position) {
-        calculate(position, barSeries.getEndIndex());
-    }
-
     /**
      * Calculates the cash flow for a single position (including accrued cashflow
      * for open positions).
      *
      * @param position   a single position
-     * @param finalIndex index up until cash flow of open positions is considered
+     * @param finalIndex the index up to which the cash flow of open positions is
+     *                   considered
      */
     public void calculate(Position position, int finalIndex) {
         boolean isLongTrade = position.getEntry().isBuy();
-        Num minusOne = barSeries.numOf(-1);
+        Num minusOne = barSeries.numFactory().numOf(-1);
         int endIndex = CashFlow.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
         final int entryIndex = position.getEntry().getIndex();
         int begin = entryIndex + 1;
         if (begin > values.size()) {
-            values.addAll(Collections.nCopies(begin - values.size(), barSeries.numOf(0)));
+            values.addAll(Collections.nCopies(begin - values.size(), barSeries.numFactory().zero()));
         }
 
         int startingIndex = Math.max(begin, 1);
         int nPeriods = endIndex - entryIndex;
         Num holdingCost = position.getHoldingCost(endIndex);
-        Num avgCost = holdingCost.dividedBy(holdingCost.numOf(nPeriods));
+        Num avgCost = holdingCost.dividedBy(getBarSeries().numFactory().numOf(nPeriods));
 
         // returns are per period (iterative). Base price needs to be updated
         // accordingly
@@ -212,16 +206,20 @@ public class Returns implements Indicator<Num> {
      * @param tradingRecord the trading record
      */
     private void calculate(TradingRecord tradingRecord) {
+        int endIndex = tradingRecord.getEndIndex(getBarSeries());
         // For each position...
-        tradingRecord.getPositions().forEach(this::calculate);
+        tradingRecord.getPositions().forEach(p -> calculate(p, endIndex));
     }
 
     /**
-     * Fills with zeroes until the end of the series.
+     * Pads {@link #values} with zeros up until {@code endIndex}.
+     *
+     * @param endIndex the end index
      */
-    private void fillToTheEnd() {
-        if (barSeries.getEndIndex() >= values.size()) {
-            values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, barSeries.numOf(0)));
+    private void fillToTheEnd(int endIndex) {
+        if (endIndex >= values.size()) {
+            values.addAll(
+                    Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, barSeries.numFactory().zero()));
         }
     }
 }

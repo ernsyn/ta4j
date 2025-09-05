@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,26 +26,30 @@ package org.ta4j.core.indicators;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.indicators.helpers.HighestValueIndicator;
-import org.ta4j.core.indicators.helpers.LowestValueIndicator;
 import org.ta4j.core.num.Num;
+
+import static org.ta4j.core.num.NaN.NaN;
 
 /**
  * The Stochastic RSI Indicator.
- * 
+ *
+ * <pre>
  * Stoch RSI = (RSI - MinimumRSIn) / (MaximumRSIn - MinimumRSIn)
+ * </pre>
  */
 public class StochasticRSIIndicator extends CachedIndicator<Num> {
 
-    private final RSIIndicator rsi;
-    private final LowestValueIndicator minRsi;
-    private final HighestValueIndicator maxRsi;
+    private final int barCount;
+    private final StochasticOscillatorKIndicator stochasticOscillatorKIndicator;
 
     /**
-     * Constructor. In most cases, this should be used to avoid confusion over what
-     * Indicator parameters should be used.
-     * 
-     * @param series   the series
+     * Constructor.
+     *
+     * <p>
+     * <b>Note:</b> In most cases, this constructor should be used to avoid
+     * confusion about which indicator parameters to use.
+     *
+     * @param series   the bar series
      * @param barCount the time frame
      */
     public StochasticRSIIndicator(BarSeries series, int barCount) {
@@ -54,8 +58,8 @@ public class StochasticRSIIndicator extends CachedIndicator<Num> {
 
     /**
      * Constructor.
-     * 
-     * @param indicator the Indicator, in practice is always a ClosePriceIndicator.
+     *
+     * @param indicator the Indicator (usually a {@link ClosePriceIndicator})
      * @param barCount  the time frame
      */
     public StochasticRSIIndicator(Indicator<Num> indicator, int barCount) {
@@ -64,21 +68,28 @@ public class StochasticRSIIndicator extends CachedIndicator<Num> {
 
     /**
      * Constructor.
-     * 
-     * @param rsiIndicator the rsi indicator
+     *
+     * @param rsiIndicator the {@link RSIIndicator}
      * @param barCount     the time frame
      */
     public StochasticRSIIndicator(RSIIndicator rsiIndicator, int barCount) {
         super(rsiIndicator);
-        this.rsi = rsiIndicator;
-        minRsi = new LowestValueIndicator(rsiIndicator, barCount);
-        maxRsi = new HighestValueIndicator(rsiIndicator, barCount);
+        this.barCount = barCount;
+        this.stochasticOscillatorKIndicator = new StochasticOscillatorKIndicator(rsiIndicator, barCount, rsiIndicator,
+                rsiIndicator);
     }
 
     @Override
     protected Num calculate(int index) {
-        Num minRsiValue = minRsi.getValue(index);
-        return rsi.getValue(index).minus(minRsiValue).dividedBy(maxRsi.getValue(index).minus(minRsiValue));
+        if (index < getCountOfUnstableBars()) {
+            return NaN;
+        }
+        return this.stochasticOscillatorKIndicator.getValue(index);
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return this.barCount;
     }
 
 }

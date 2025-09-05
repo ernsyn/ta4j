@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -35,6 +35,11 @@ public class AccumulationDistributionIndicator extends RecursiveCachedIndicator<
 
     private final CloseLocationValueIndicator clvIndicator;
 
+    /**
+     * Constructor.
+     *
+     * @param series the bar series
+     */
     public AccumulationDistributionIndicator(BarSeries series) {
         super(series);
         this.clvIndicator = new CloseLocationValueIndicator(series);
@@ -43,7 +48,7 @@ public class AccumulationDistributionIndicator extends RecursiveCachedIndicator<
     @Override
     protected Num calculate(int index) {
         if (index == 0) {
-            return numOf(0);
+            return getBarSeries().numFactory().zero();
         }
 
         // Calculating the money flow multiplier
@@ -53,5 +58,10 @@ public class AccumulationDistributionIndicator extends RecursiveCachedIndicator<
         Num moneyFlowVolume = moneyFlowMultiplier.multipliedBy(getBarSeries().getBar(index).getVolume());
 
         return moneyFlowVolume.plus(getValue(index - 1));
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,34 +29,34 @@ import org.ta4j.core.indicators.helpers.ConstantIndicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Indicator-between-indicators rule.
- *
- * Satisfied when the value of the {@link Indicator indicator} is between the
- * values of the boundary (up/down) indicators.
+ * Satisfied when the value of the {@link Indicator indicator} is between two
+ * other indicators or values.
  */
 public class InPipeRule extends AbstractRule {
 
     /** The upper indicator */
-    private Indicator<Num> upper;
+    private final Indicator<Num> upper;
+
     /** The lower indicator */
-    private Indicator<Num> lower;
+    private final Indicator<Num> lower;
+
     /** The evaluated indicator */
-    private Indicator<Num> ref;
+    private final Indicator<Num> ref;
 
     /**
      * Constructor.
-     * 
+     *
      * @param ref   the reference indicator
      * @param upper the upper threshold
      * @param lower the lower threshold
      */
     public InPipeRule(Indicator<Num> ref, Number upper, Number lower) {
-        this(ref, ref.numOf(upper), ref.numOf(lower));
+        this(ref, ref.getBarSeries().numFactory().numOf(upper), ref.getBarSeries().numFactory().numOf(lower));
     }
 
     /**
      * Constructor.
-     * 
+     *
      * @param ref   the reference indicator
      * @param upper the upper threshold
      * @param lower the lower threshold
@@ -68,7 +68,7 @@ public class InPipeRule extends AbstractRule {
 
     /**
      * Constructor.
-     * 
+     *
      * @param ref   the reference indicator
      * @param upper the upper indicator
      * @param lower the lower indicator
@@ -79,10 +79,12 @@ public class InPipeRule extends AbstractRule {
         this.ref = ref;
     }
 
+    /** This rule does not use the {@code tradingRecord}. */
     @Override
     public boolean isSatisfied(int index, TradingRecord tradingRecord) {
-        final boolean satisfied = ref.getValue(index).isLessThanOrEqual(upper.getValue(index))
-                && ref.getValue(index).isGreaterThanOrEqual(lower.getValue(index));
+        Num refValue = ref.getValue(index);
+        final boolean satisfied = refValue.isLessThanOrEqual(upper.getValue(index))
+                && refValue.isGreaterThanOrEqual(lower.getValue(index));
         traceIsSatisfied(index, satisfied);
         return satisfied;
     }

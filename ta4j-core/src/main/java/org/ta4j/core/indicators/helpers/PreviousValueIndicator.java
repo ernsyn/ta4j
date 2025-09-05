@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,21 +25,24 @@ package org.ta4j.core.indicators.helpers;
 
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
+import org.ta4j.core.num.NaN;
 import org.ta4j.core.num.Num;
 
 /**
- * Returns the previous (n-th) value of an indicator
+ * Returns the (n-th) previous value of an indicator.
+ *
+ * If the (n-th) previous index is below the first index from the bar series,
+ * then {@link NaN#NaN} is returned.
  */
 public class PreviousValueIndicator extends CachedIndicator<Num> {
 
     private final int n;
-    private Indicator<Num> indicator;
+    private final Indicator<Num> indicator;
 
     /**
      * Constructor.
      *
-     * @param indicator the indicator of which the previous value should be
-     *                  calculated
+     * @param indicator the indicator from which to calculate the previous value
      */
     public PreviousValueIndicator(Indicator<Num> indicator) {
         this(indicator, 1);
@@ -48,8 +51,7 @@ public class PreviousValueIndicator extends CachedIndicator<Num> {
     /**
      * Constructor.
      *
-     * @param indicator the indicator of which the previous value should be
-     *                  calculated
+     * @param indicator the indicator from which to calculate the previous value
      * @param n         parameter defines the previous n-th value
      */
     public PreviousValueIndicator(Indicator<Num> indicator, int n) {
@@ -61,9 +63,16 @@ public class PreviousValueIndicator extends CachedIndicator<Num> {
         this.indicator = indicator;
     }
 
+    @Override
     protected Num calculate(int index) {
-        int previousValue = Math.max(0, (index - n));
-        return this.indicator.getValue(previousValue);
+        int previousIndex = index - n;
+        return previousIndex < 0 ? NaN.NaN : indicator.getValue(previousIndex);
+    }
+
+    /** @return {@link #n} */
+    @Override
+    public int getCountOfUnstableBars() {
+        return n;
     }
 
     @Override

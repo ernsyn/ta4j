@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -40,7 +40,7 @@ public class BullishEngulfingIndicator extends CachedIndicator<Boolean> {
     /**
      * Constructor.
      *
-     * @param series a bar series
+     * @param series the bar series
      */
     public BullishEngulfingIndicator(BarSeries series) {
         super(series);
@@ -63,5 +63,10 @@ public class BullishEngulfingIndicator extends CachedIndicator<Boolean> {
                     && currClosePrice.isGreaterThan(prevOpenPrice) && currClosePrice.isGreaterThan(prevClosePrice);
         }
         return false;
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

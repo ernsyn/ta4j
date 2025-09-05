@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -59,13 +59,15 @@ public class PearsonCorrelationIndicator extends RecursiveCachedIndicator<Num> {
     @Override
     protected Num calculate(int index) {
 
-        Num n = numOf(barCount);
+        final var numFactory = getBarSeries().numFactory();
+        Num n = numFactory.numOf(barCount);
 
-        Num Sx = numOf(0);
-        Num Sy = numOf(0);
-        Num Sxx = numOf(0);
-        Num Syy = numOf(0);
-        Num Sxy = numOf(0);
+        Num zero = numFactory.zero();
+        Num Sx = zero;
+        Num Sy = zero;
+        Num Sxx = zero;
+        Num Syy = zero;
+        Num Sxy = zero;
 
         for (int i = Math.max(getBarSeries().getBeginIndex(), index - barCount + 1); i <= index; i++) {
 
@@ -83,12 +85,17 @@ public class PearsonCorrelationIndicator extends RecursiveCachedIndicator<Num> {
         Num toSqrt = (n.multipliedBy(Sxx).minus(Sx.multipliedBy(Sx)))
                 .multipliedBy(n.multipliedBy(Syy).minus(Sy.multipliedBy(Sy)));
 
-        if (toSqrt.isGreaterThan(numOf(0))) {
+        if (toSqrt.isGreaterThan(numFactory.zero())) {
             // pearson = (n * Sxy - Sx * Sy) / sqrt((n * Sxx - Sx * Sx) * (n * Syy - Sy *
             // Sy))
             return (n.multipliedBy(Sxy).minus(Sx.multipliedBy(Sy))).dividedBy(toSqrt.sqrt());
         }
 
         return NaN;
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return barCount;
     }
 }

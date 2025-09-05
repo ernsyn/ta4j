@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -25,36 +25,34 @@ package org.ta4j.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
-import org.ta4j.core.num.DecimalNum;
-import org.ta4j.core.num.DoubleNum;
-import org.ta4j.core.num.Num;
+import org.ta4j.core.bars.TimeBarBuilderFactory;
+import org.ta4j.core.num.DecimalNumFactory;
+import org.ta4j.core.num.NumFactory;
 
+/**
+ * A builder to build a new {@link BaseBarSeries}.
+ */
 public class BaseBarSeriesBuilder implements BarSeriesBuilder {
 
-    /**
-     * Default Num type function
-     **/
-    private static Function<Number, Num> defaultFunction = DecimalNum::valueOf;
+    /** The {@link #name} for an unnamed bar series. */
+    private static final String UNNAMED_SERIES_NAME = "unnamed_series";
+
     private List<Bar> bars;
     private String name;
-    private Function<Number, Num> numFunction;
     private boolean constrained;
     private int maxBarCount;
+    private NumFactory numFactory = DecimalNumFactory.getInstance();
+    private BarBuilderFactory barBuilderFactory = new TimeBarBuilderFactory();
 
+    /** Constructor to build a {@code BaseBarSeries}. */
     public BaseBarSeriesBuilder() {
         initValues();
-    }
-
-    public static void setDefaultFunction(Function<Number, Num> defaultFunction) {
-        BaseBarSeriesBuilder.defaultFunction = defaultFunction;
     }
 
     private void initValues() {
         this.bars = new ArrayList<>();
         this.name = "unnamed_series";
-        this.numFunction = BaseBarSeriesBuilder.defaultFunction;
         this.constrained = false;
         this.maxBarCount = Integer.MAX_VALUE;
     }
@@ -67,52 +65,66 @@ public class BaseBarSeriesBuilder implements BarSeriesBuilder {
             beginIndex = 0;
             endIndex = bars.size() - 1;
         }
-        BaseBarSeries series = new BaseBarSeries(name, bars, beginIndex, endIndex, constrained, numFunction);
+
+        var series = new BaseBarSeries(name == null ? UNNAMED_SERIES_NAME : name, bars, beginIndex, endIndex,
+                constrained, numFactory, barBuilderFactory);
         series.setMaximumBarCount(maxBarCount);
         initValues(); // reinitialize values for next series
         return series;
     }
 
+    /**
+     * @param constrained to set
+     * @return {@code this}
+     */
     public BaseBarSeriesBuilder setConstrained(boolean constrained) {
         this.constrained = constrained;
         return this;
     }
 
+    /**
+     * @param numFactory to set {@link BaseBarSeries#numFactory()}
+     * @return {@code this}
+     */
+    public BaseBarSeriesBuilder withNumFactory(NumFactory numFactory) {
+        this.numFactory = numFactory;
+        return this;
+    }
+
+    /**
+     * @param name to set {@link BaseBarSeries#getName()}
+     * @return {@code this}
+     */
     public BaseBarSeriesBuilder withName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * @param bars to set {@link BaseBarSeries#getBarData()}
+     * @return {@code this}
+     */
     public BaseBarSeriesBuilder withBars(List<Bar> bars) {
         this.bars = bars;
         return this;
     }
 
+    /**
+     * @param maxBarCount to set {@link BaseBarSeries#getMaximumBarCount()}
+     * @return {@code this}
+     */
     public BaseBarSeriesBuilder withMaxBarCount(int maxBarCount) {
         this.maxBarCount = maxBarCount;
         return this;
     }
 
-    public BaseBarSeriesBuilder withNumTypeOf(Num type) {
-        numFunction = type.function();
+    /**
+     * @param barBuilderFactory to build bars with the same datatype as series
+     *
+     * @return {@code this}
+     */
+    public BaseBarSeriesBuilder withBarBuilderFactory(final BarBuilderFactory barBuilderFactory) {
+        this.barBuilderFactory = barBuilderFactory;
         return this;
     }
-
-    public BaseBarSeriesBuilder withNumTypeOf(Function<Number, Num> function) {
-        numFunction = function;
-        return this;
-    }
-
-    public BaseBarSeriesBuilder withNumTypeOf(Class<? extends Num> abstractNumClass) {
-        if (abstractNumClass == DecimalNum.class) {
-            numFunction = DecimalNum::valueOf;
-            return this;
-        } else if (abstractNumClass == DoubleNum.class) {
-            numFunction = DoubleNum::valueOf;
-            return this;
-        }
-        numFunction = DecimalNum::valueOf;
-        return this;
-    }
-
 }

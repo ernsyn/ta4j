@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -31,6 +31,7 @@ import org.ta4j.core.num.Num;
 /**
  * Lower shadow height indicator.
  *
+ * <p>
  * Provides the (absolute) difference between the low price and the lowest price
  * of the candle body. I.e.: low price - min(open price, close price)
  *
@@ -43,7 +44,7 @@ public class LowerShadowIndicator extends CachedIndicator<Num> {
     /**
      * Constructor.
      *
-     * @param series a bar series
+     * @param series the bar series
      */
     public LowerShadowIndicator(BarSeries series) {
         super(series);
@@ -61,5 +62,10 @@ public class LowerShadowIndicator extends CachedIndicator<Num> {
             // Bearish
             return closePrice.minus(t.getLowPrice());
         }
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }

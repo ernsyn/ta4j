@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -34,22 +34,16 @@ import org.ta4j.core.TradingRecord;
 import org.ta4j.core.num.Num;
 
 /**
- * The cash flow.
- *
- * This class allows to follow the money cash flow involved by a list of
- * positions over a bar series.
+ * Allows to follow the money cash flow involved by a list of positions over a
+ * bar series.
  */
 public class CashFlow implements Indicator<Num> {
 
-    /**
-     * The bar series
-     */
+    /** The bar series. */
     private final BarSeries barSeries;
 
-    /**
-     * The cash flow values
-     */
-    private List<Num> values;
+    /** The (accrued) cash flow sequence (without trading costs). */
+    private final List<Num> values;
 
     /**
      * Constructor for cash flows of a closed position.
@@ -59,9 +53,10 @@ public class CashFlow implements Indicator<Num> {
      */
     public CashFlow(BarSeries barSeries, Position position) {
         this.barSeries = barSeries;
-        values = new ArrayList<>(Collections.singletonList(numOf(1)));
+        values = new ArrayList<>(Collections.singletonList(barSeries.numFactory().one()));
+
         calculate(position);
-        fillToTheEnd();
+        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -71,11 +66,7 @@ public class CashFlow implements Indicator<Num> {
      * @param tradingRecord the trading record
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord) {
-        this.barSeries = barSeries;
-        values = new ArrayList<>(Collections.singletonList(numOf(1)));
-        calculate(tradingRecord);
-
-        fillToTheEnd();
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries));
     }
 
     /**
@@ -88,10 +79,10 @@ public class CashFlow implements Indicator<Num> {
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex) {
         this.barSeries = barSeries;
-        values = new ArrayList<>(Collections.singletonList(numOf(1)));
-        calculate(tradingRecord, finalIndex);
+        values = new ArrayList<>(Collections.singletonList(getBarSeries().numFactory().one()));
 
-        fillToTheEnd();
+        calculate(tradingRecord, finalIndex);
+        fillToTheEnd(finalIndex);
     }
 
     /**
@@ -104,13 +95,13 @@ public class CashFlow implements Indicator<Num> {
     }
 
     @Override
-    public BarSeries getBarSeries() {
-        return barSeries;
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 
     @Override
-    public Num numOf(Number number) {
-        return barSeries.numOf(number);
+    public BarSeries getBarSeries() {
+        return barSeries;
     }
 
     /**
@@ -150,12 +141,12 @@ public class CashFlow implements Indicator<Num> {
             values.addAll(Collections.nCopies(begin - values.size(), lastValue));
         }
         // Trade is not valid if net balance at the entryIndex is negative
-        if (values.get(values.size() - 1).isGreaterThan(values.get(0).numOf(0))) {
+        if (values.get(values.size() - 1).isGreaterThan(values.get(0).getNumFactory().numOf(0))) {
             int startingIndex = Math.max(begin, 1);
 
             int nPeriods = endIndex - entryIndex;
             Num holdingCost = position.getHoldingCost(endIndex);
-            Num avgCost = holdingCost.dividedBy(holdingCost.numOf(nPeriods));
+            Num avgCost = holdingCost.dividedBy(holdingCost.getNumFactory().numOf(nPeriods));
 
             // Add intermediate cash flows during position
             Num netEntryPrice = position.getEntry().getNetPrice();
@@ -189,8 +180,9 @@ public class CashFlow implements Indicator<Num> {
         if (isLongTrade) {
             ratio = exitPrice.dividedBy(entryPrice);
         } else {
-            ratio = entryPrice.numOf(2).minus(exitPrice.dividedBy(entryPrice));
+            ratio = entryPrice.getNumFactory().numOf(2).minus(exitPrice.dividedBy(entryPrice));
         }
+
         return ratio;
     }
 
@@ -239,17 +231,19 @@ public class CashFlow implements Indicator<Num> {
     }
 
     /**
-     * Fills with last value till the end of the series.
+     * Pads {@link #values} with its last value up until {@code endIndex}.
+     *
+     * @param endIndex the end index
      */
-    private void fillToTheEnd() {
-        if (barSeries.getEndIndex() >= values.size()) {
+    private void fillToTheEnd(int endIndex) {
+        if (endIndex >= values.size()) {
             Num lastValue = values.get(values.size() - 1);
             values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, lastValue));
         }
     }
 
     /**
-     * Determines the the valid final index to be considered.
+     * Determines the valid final index to be considered.
      *
      * @param position   the position
      * @param finalIndex index up until cash flows of open positions are considered

@@ -1,7 +1,7 @@
-/**
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2025 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -42,7 +42,12 @@ public class ChandelierExitLongIndicator extends CachedIndicator<Num> {
     private final Num k;
 
     /**
-     * Constructor.
+     * Constructor with:
+     *
+     * <ul>
+     * <li>{@code barCount} = 22
+     * <li>{@code k} = 3
+     * </ul>
      *
      * @param series the bar series
      */
@@ -59,13 +64,18 @@ public class ChandelierExitLongIndicator extends CachedIndicator<Num> {
      */
     public ChandelierExitLongIndicator(BarSeries series, int barCount, double k) {
         super(series);
-        high = new HighestValueIndicator(new HighPriceIndicator(series), barCount);
-        atr = new ATRIndicator(series, barCount);
-        this.k = numOf(k);
+        this.high = new HighestValueIndicator(new HighPriceIndicator(series), barCount);
+        this.atr = new ATRIndicator(series, barCount);
+        this.k = getBarSeries().numFactory().numOf(k);
     }
 
     @Override
     protected Num calculate(int index) {
         return high.getValue(index).minus(atr.getValue(index).multipliedBy(k));
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
     }
 }
